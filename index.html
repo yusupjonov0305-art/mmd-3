@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MySQL demo</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 480px; margin: 40px auto; padding: 0 16px; }
+    input { padding: 8px; width: 60%; }
+    button { padding: 8px 14px; }
+    li { margin: 6px 0; }
+    small { color: #666; }
+  </style>
+</head>
+<body>
+  <h1>Ismingizni qoldiring</h1>
+  <input id="name" placeholder="Ism" maxlength="100">
+  <button onclick="add()">Saqlash</button>
+  <ul id="list"></ul>
+
+<script>
+const API = "/api";
+
+async function load() {
+  const res = await fetch(API);
+  const rows = await res.json();
+  if (!Array.isArray(rows)) return;
+  const ul = document.getElementById("list");
+  ul.innerHTML = "";
+  rows.forEach(r => {
+    const li = document.createElement("li");
+    li.textContent = r.name + " ";
+    const s = document.createElement("small");
+    s.textContent = "(" + new Date(r.created_at).toLocaleString() + ")";
+    li.appendChild(s);
+    ul.appendChild(li);
+  });
+}
+
+let saving = false;
+
+async function add() {
+  if (saving) return;
+  const input = document.getElementById("name");
+  const btn = document.querySelector("button");
+  const name = input.value.trim();
+  if (!name) return;
+
+  saving = true;
+  if (btn) btn.disabled = true;
+
+  try {
+    await fetch(API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name })
+    });
+    input.value = "";
+    await load();
+  } finally {
+    saving = false;
+    if (btn) btn.disabled = false;
+  }
+}
+
+load();
+</script>
+</body>
+</html>
